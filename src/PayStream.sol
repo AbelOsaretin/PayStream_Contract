@@ -51,6 +51,12 @@ contract PayStream {
     // Mapping of employer addresses to their employees addresses
     mapping(address => address[]) public employerToEmployees;
 
+    // Array of Employees
+    Employee[] public employeesArray;
+
+    // Counter for employeesArray
+    uint256 employeesCounter;
+
     // Mapping of addresses to Employee structs
     mapping(address => Employee) public employees;
 
@@ -147,7 +153,7 @@ contract PayStream {
     ) external {
         require(
             userTypes[_employerAddr] == UserType.None,
-            "Address already registered"
+            "Employer Address already registered"
         );
 
         userTypes[_employerAddr] = UserType.Employer;
@@ -173,7 +179,7 @@ contract PayStream {
     ) external onlyEmployer {
         require(
             userTypes[_employeeAddress] == UserType.None,
-            "Address already registered"
+            "Employee Address already registered"
         );
 
         userTypes[_employeeAddress] = UserType.Employee;
@@ -187,6 +193,8 @@ contract PayStream {
         newEmployee.taxRate = 0; // Default tax rate, to be updated later
 
         employerToEmployees[msg.sender].push(_employeeAddress);
+        employeesArray.push(newEmployee);
+        employeesCounter = employeesCounter + 1;
 
         emit EmployeeRegistered(_employeeAddress, _name, msg.sender);
     }
@@ -379,7 +387,7 @@ contract PayStream {
      * @dev Verify employee KYC
      * @param _employeeAddress Address of the employee
      */
-    function verifyEmployeeKYC(address _employeeAddress) external onlyOwner {
+    function approveEmployeeKYC(address _employeeAddress) external onlyOwner {
         require(
             userTypes[_employeeAddress] == UserType.Employee,
             "Not registered as employee"
