@@ -51,11 +51,8 @@ contract PayStream {
     // Mapping of employer addresses to their employees addresses
     mapping(address => address[]) public employerToEmployees;
 
-    // Array of Employees
-    Employee[] public employeesArray;
-
-    // Counter for employeesArray
-    uint256 employeesCounter;
+    // Counter for allEmployees
+    uint256 public employeesCounter;
 
     // Mapping of addresses to Employee structs
     mapping(address => Employee) public employees;
@@ -70,6 +67,7 @@ contract PayStream {
     }
 
     PaymentRecord[] public paymentHistory;
+    Employee[] allEmployees;
 
     // ========== EVENTS ==========
 
@@ -193,7 +191,7 @@ contract PayStream {
         newEmployee.taxRate = 0; // Default tax rate, to be updated later
 
         employerToEmployees[msg.sender].push(_employeeAddress);
-        employeesArray.push(newEmployee);
+        allEmployees.push(newEmployee);
         employeesCounter = employeesCounter + 1;
 
         emit EmployeeRegistered(_employeeAddress, _name, msg.sender);
@@ -288,40 +286,6 @@ contract PayStream {
             netAmount,
             taxAmount
         );
-    }
-
-    /**
-     * @dev View payment history for employer's employees
-     * @return Array of payment records
-     */
-    function viewPaymentHistory()
-        external
-        view
-        onlyEmployer
-        returns (PaymentRecord[] memory)
-    {
-        uint256 count = 0;
-
-        // Count relevant records
-        for (uint256 i = 0; i < paymentHistory.length; i++) {
-            if (paymentHistory[i].employer == msg.sender) {
-                count++;
-            }
-        }
-
-        // Create result array
-        PaymentRecord[] memory result = new PaymentRecord[](count);
-        uint256 index = 0;
-
-        // Fill result array
-        for (uint256 i = 0; i < paymentHistory.length; i++) {
-            if (paymentHistory[i].employer == msg.sender) {
-                result[index] = paymentHistory[i];
-                index++;
-            }
-        }
-
-        return result;
     }
 
     // ========== EMPLOYEE FUNCTIONS ==========
@@ -423,6 +387,24 @@ contract PayStream {
         employees[_employeeAddress].kycStatus = KYCStatus.Rejected;
 
         emit KYCRejected(_employeeAddress, UserType.Employee, _reason);
+    }
+
+    // ========== View FUNCTIONS ==========
+
+    /**
+     * @dev View payment history for employer's employees
+     * @return Array of payment records
+     */
+    function viewAllPayments() public view returns (PaymentRecord[] memory) {
+        return paymentHistory;
+    }
+
+    /**
+     * @dev View employees data
+     * @return Array of employee records
+     */
+    function viewAllEmployees() public view returns (Employee[] memory) {
+        return allEmployees;
     }
 
     // Function to receive Ether. msg.data must be empty
